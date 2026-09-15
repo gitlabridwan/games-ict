@@ -1,0 +1,7 @@
+{
+  "provider": "firebase",
+  "endpoint": "/api/room",
+  "movingIntervalMs": 350,
+  "idleIntervalMs": 1200,
+  "maxPlayers": 8
+}
