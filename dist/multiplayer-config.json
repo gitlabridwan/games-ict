@@ -1,0 +1,10 @@
+{
+  "provider": "firebase",
+  "firebase": {
+    "apiKey": "AIzaSyDmPBQ6SmLbLhHUzA235bsKodr6oaFOGTc",
+    "databaseURL": "https://game-85ad2-default-rtdb.firebaseio.com/"
+  },
+  "movingIntervalMs": 350,
+  "idleIntervalMs": 1200,
+  "maxPlayers": 8
+}

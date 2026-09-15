@@ -1,0 +1,46 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "rooms": {
+      "$room": {
+        ".read": "auth != null && data.child('players').child(auth.uid).exists()",
+        ".write": "auth != null && !data.exists() && newData.child('host').val() === auth.uid && newData.child('players').child(auth.uid).exists()",
+        ".validate": "newData.hasChildren(['host', 'status', 'created', 'expires', 'order', 'players'])",
+        "host": {
+          ".write": "auth != null && data.parent().child('host').val() === auth.uid",
+          ".validate": "newData.isString()"
+        },
+        "status": {
+          ".write": "auth != null && data.parent().child('host').val() === auth.uid",
+          ".validate": "newData.val() === 'lobby' || newData.val() === 'playing' || newData.val() === 'ended'"
+        },
+        "created": {
+          ".validate": "newData.isNumber()"
+        },
+        "expires": {
+          ".validate": "newData.isNumber()"
+        },
+        "order": {
+          ".validate": "newData.hasChildren()"
+        },
+        "players": {
+          ".validate": "newData.numChildren() >= 1 && newData.numChildren() <= 8",
+          "$uid": {
+            ".write": "auth != null && $uid === auth.uid",
+            ".validate": "newData.hasChildren(['name', 'kelas', 'avatar', 'state', 'report', 'ready', 'seen', 'joined']) && newData.child('name').isString() && newData.child('kelas').isString() && newData.child('avatar').isNumber() && newData.child('state').isString() && newData.child('report').isString() && newData.child('ready').isBoolean() && newData.child('seen').isNumber() && newData.child('joined').isNumber()"
+          }
+        },
+        "chat": {
+          "$message": {
+            ".write": "auth != null && data.parent().parent().child('players').child(auth.uid).exists() && !data.exists() && newData.child('player').val() === auth.uid",
+            ".validate": "newData.hasChildren(['id', 'player', 'name', 'message', 'created']) && newData.child('message').isString() && newData.child('message').val().length <= 120 && newData.child('created').isNumber()"
+          }
+        },
+        "coop": {
+          ".write": "auth != null && data.parent().child('players').child(auth.uid).exists() && data.parent().child('status').val() === 'playing'"
+        }
+      }
+    }
+  }
+}

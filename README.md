@@ -1,42 +1,97 @@
-# Kota Komputasional — GitHub Pages
+# Kota Komputasional — GitHub Pages + Multiplayer
 
-Paket ini sudah disesuaikan agar dapat diterbitkan sebagai website statis di GitHub Pages, termasuk ketika alamat website memakai subfolder nama repositori.
+Paket ini sudah disesuaikan agar game **Kota Komputasional** dapat dipasang pada
+GitHub Pages, termasuk ketika alamatnya berada di subfolder repository seperti:
 
-## Cara menerbitkan
+`https://nama-akun.github.io/kota-komputasional-ipo/`
 
-1. Buat repositori baru di GitHub, misalnya `kota-komputasional-ipo`.
-2. Ekstrak ZIP ini, lalu unggah **seluruh isi folder hasil ekstrak** ke cabang `main`. Pastikan `index.html`, folder `_next`, folder `.github`, dan file `.nojekyll` berada di root repositori.
-3. Buka **Settings → Pages** pada repositori.
-4. Pada **Build and deployment → Source**, pilih **GitHub Actions**.
-5. Buka tab **Actions** dan tunggu workflow **Deploy GitHub Pages** selesai. Alamat website akan muncul pada halaman deployment dan menu Pages.
+Mode solo berjalan sepenuhnya di browser. Mode bersama memakai Firebase Realtime
+Database karena GitHub Pages tidak menjalankan server Node.js atau endpoint API.
 
-Setiap perubahan yang dikirim ke cabang `main` akan diterbitkan otomatis.
+## Yang sudah disiapkan
 
-## Jika mengunggah melalui Git
+- asset dan modul memakai alamat relatif agar tidak 404 di GitHub Pages;
+- file `.nojekyll` agar folder `_next` ikut diterbitkan;
+- workflow GitHub Actions untuk menerbitkan folder `dist`;
+- dukungan ruang bersama hingga 8 pemain melalui Firebase;
+- aturan dasar keamanan Realtime Database pada `firebase.rules.json`;
+- server Node.js lama tetap tersedia untuk pengujian lokal atau hosting non-GitHub.
 
-```bash
-git init
-git add .
-git commit -m "Publish Kota Komputasional"
-git branch -M main
-git remote add origin https://github.com/USERNAME/NAMA-REPOSITORI.git
-git push -u origin main
+## A. Aktifkan mode bersama melalui Firebase
+
+Langkah ini hanya dilakukan sekali.
+
+1. Buka Firebase Console dan buat sebuah project.
+2. Buka **Build → Authentication → Sign-in method**, lalu aktifkan **Anonymous**.
+3. Pada pengaturan Authentication, tambahkan `nama-akun.github.io` ke daftar
+   **Authorized domains** bila domain tersebut belum tercantum.
+4. Buka **Build → Realtime Database**, buat database, dan catat URL databasenya.
+5. Pada halaman **Project settings → General**, tambahkan Web App jika belum ada,
+   lalu salin nilai `apiKey`.
+6. Buka file `dist/multiplayer-config.json`, lalu ganti dua nilai bertanda
+   `GANTI_...` dengan nilai milik project Firebase Anda.
+7. Pada Realtime Database, buka tab **Rules**, salin seluruh isi
+   `firebase.rules.json`, lalu klik **Publish**.
+
+Contoh konfigurasi akhir:
+
+```json
+{
+  "provider": "firebase",
+  "firebase": {
+    "apiKey": "AIzaSyCONTOH123",
+    "databaseURL": "https://kota-komputasional-default-rtdb.asia-southeast1.firebasedatabase.app"
+  },
+  "movingIntervalMs": 350,
+  "idleIntervalMs": 1200,
+  "maxPlayers": 8
+}
 ```
 
-Ganti `USERNAME` dan `NAMA-REPOSITORI` sesuai akun dan repositori GitHub Anda.
+`apiKey` Firebase untuk Web App memang berada di sisi klien. Perlindungan data
+tetap ditentukan oleh Authentication dan Realtime Database Rules, sehingga
+jangan memakai mode test/public rules untuk website produksi.
 
-## Fitur
+## B. Unggah ke GitHub
 
-- Mode solo, progres lokal, animasi, audio, permainan, dan ekspor hasil dapat digunakan langsung di GitHub Pages.
-- GitHub Pages hanya menyediakan hosting statis dan tidak menjalankan `server.mjs`. Karena itu, ruang multiplayer lintas perangkat memerlukan backend terpisah. Paket ini otomatis memakai demo ruang lokal pada browser/perangkat yang sama ketika backend online tidak tersedia.
-- Untuk multiplayer lintas perangkat, hubungkan konfigurasi Firebase atau publikasikan `server.mjs` pada layanan Node.js, lalu arahkan endpoint di `multiplayer-config.json` ke backend tersebut.
+1. Buat repository baru, misalnya `kota-komputasional-ipo`.
+2. Ekstrak ZIP ini, lalu unggah **seluruh isi folder** `kota-komputasional-ipo`
+   ke root repository. Pastikan folder `.github` ikut terunggah.
+3. Commit ke branch `main`.
+4. Buka **Settings → Pages → Build and deployment → Source**, pilih
+   **GitHub Actions**.
+5. Buka tab **Actions** dan tunggu workflow
+   **Deploy Kota Komputasional to GitHub Pages** selesai.
+6. Alamat game akan muncul pada hasil workflow dan halaman Settings → Pages.
 
-## Uji lokal
+Setelah aktif, pemain pertama memilih **Main bersama → Buat ruang**. Pemain lain
+membuka URL GitHub Pages yang sama, memilih **Gabung ruang**, lalu memasukkan kode
+6 karakter. Jangan menguji multiplayer hanya dengan duplikasi tab yang memakai
+sesi browser sama; gunakan browser/perangkat berbeda atau jendela samaran.
 
-Website harus dibuka melalui server HTTP, bukan dengan klik dua kali `index.html`. Salah satu cara sederhana:
+## C. Pengujian sebelum diunggah
+
+Pastikan Node.js terpasang, lalu jalankan:
 
 ```bash
-npx serve .
+npm run validate
+npm start
 ```
 
-Lalu buka alamat lokal yang ditampilkan di terminal.
+Buka `http://localhost:4173`. Jika konfigurasi Firebase sudah diisi, mode solo
+dan mode bersama dapat diuji dari browser/perangkat berbeda.
+
+## Mengapa server.mjs masih disertakan?
+
+`server.mjs` adalah alternatif backend berbasis memori untuk hosting yang dapat
+menjalankan Node.js. Ia bekerja saat website dan API berada pada server yang
+sama, tetapi tidak dijalankan oleh GitHub Pages. Untuk publikasi GitHub Pages,
+gunakan Firebase sebagaimana langkah A.
+
+## Pemeriksaan cepat bila multiplayer gagal
+
+- Pesan **Firebase belum siap**: pastikan Anonymous Authentication sudah aktif.
+- Pesan **Firebase menolak permintaan**: periksa `databaseURL` dan Rules.
+- Ruang tidak ditemukan: pastikan kode benar dan ruang belum melewati 24 jam.
+- Pemain tidak terlihat: pastikan semua pemain memakai URL deployment yang sama
+  dan project Firebase yang sama.
